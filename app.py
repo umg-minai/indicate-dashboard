@@ -5,6 +5,7 @@ from typing import Tuple, cast
 from indicate_data_exchange_api_client import AggregationPeriodKind
 from starlette.applications import Starlette
 from starlette.requests import Request
+from starlette.responses import JSONResponse
 from starlette.routing import Route, Mount
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
@@ -109,6 +110,13 @@ def indicator_detail(state):
         return call_with_error_handling(state, request, render_details)
     return indicator_detail_closure
 
+
+def health_check(state):
+    async def health_check_closure(request: Request):
+        return JSONResponse(content={"status": "ok"}, status_code=200)
+    return health_check_closure
+
+
 # Load configuration and select data provider.
 configuration = load_configuration()
 state.configuration = configuration
@@ -133,6 +141,7 @@ app = Starlette(debug=configuration.debug_mode, routes=[
     Mount('/static', StaticFiles(directory='static'), name='static'),
     Route('/', overview(state)),
     Route("/indicator/{indicator_id:int}", indicator_detail(state)),
+    Route('/healthcheck', health_check(state)),
 ])
 
 

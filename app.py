@@ -134,3 +134,13 @@ app = Starlette(debug=configuration.debug_mode, routes=[
     Route('/', overview(state)),
     Route("/indicator/{indicator_id:int}", indicator_detail(state)),
 ])
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(
+        app,
+        host=configuration.listen_address,
+        port=configuration.listen_port,
+        log_level="info"
+    )

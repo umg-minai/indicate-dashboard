@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>INDICATE Quality Dashboard</title>
+    <link rel="icon" type="image/svg" href="/static/favicon.svg"/>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="topbar">
+    <div class="brand">INDICATE Quality Dashboard</div>
+    <nav class="navlinks">
+        <a href="/">Overview</a>
+    </nav>
+</div>
+
+<main class="container">
+    <h1>Error</h1>
+    <h2>Configuration</h2>
+    <table>
+        <tr>
+            <td>Provider id</td>
+            <td>{{ configuration.provider_id }}</td>
+        </tr>
+        <tr>
+            <td>Provider name</td>
+            <td>{{ configuration.provider_name }}</td>
+        </tr>
+        <tr>
+            <td>Data exchange endpoint</td>
+            <td>{{ configuration.data_exchange_endpoint }}</td>
+        </tr>
+    </table>
+    <h2>Error retrieving data from INDICATE hub:</h2>
+    <div style="font-family: mono">{{ error }}</div>
+</main>
+</body>
+</html>
+

@@ -16,11 +16,16 @@ from providers import OpenAPIDataProvider, RandomDataProvider
 logger = logging.getLogger("uvicorn.error")
 
 
-DATA_PROVIDER = None
-
-
 templates = Jinja2Templates('templates')
 
+
+class State:
+    def __init__(self):
+        self.configuration = None
+        self.data_provider = None
+
+
+state = State()
 
 def parse_date(request: Request, qname, default):
     s = request.query_params.get(qname)
@@ -59,41 +64,56 @@ def handle_time_parameters(request: Request) \
     return period, start, end
 
 
-async def overview(request):
-    period, start, end = handle_time_parameters(request)
-    overview_data = DATA_PROVIDER.get_overview(period, start, end)
-    context = {
-        "period":           period,
-        "start":            start,
-        "end":              end,
-        "times":            special_times(),
-        'with_provider_id': overview_data['with_provider_id'],
-        "indicators":       overview_data['indicators'],
-    }
-    return templates.TemplateResponse(request, 'overview.html', context=context)
+def call_with_error_handling(state, request, continuation):
+    try:
+        return continuation(request)
+    except Exception as e:
+        context = {"error": str(e), "configuration": state.configuration}
+        return templates.TemplateResponse(request, 'error.html', context=context)
 
 
-async def indicator_detail(request: Request):
-    indicator_id = request.path_params['indicator_id']
-    period, start, end = handle_time_parameters(request)
-    detail_data = DATA_PROVIDER.get_indicator_detail(indicator_id, period, start, end)
-    context = {
-        "period":           period,
-        "start":            start,
-        "end":              end,
-        "times":            special_times(),
-        'with_provider_id': detail_data['with_provider_id'],
-        'name':             detail_data['name'],
-        'description':      detail_data['description'],
-        "providers":        detail_data['providers'],
-    }
-    return templates.TemplateResponse(request, 'detail.html', context=context)
+def overview(state):
+    async def overview_closure(request):
+        def render_overview(request):
+            period, start, end = handle_time_parameters(request)
+            overview_data = state.data_provider.get_overview(period, start, end)
+            context = {
+                "period":           period,
+                "start":            start,
+                "end":              end,
+                "times":            special_times(),
+                'with_provider_id': overview_data['with_provider_id'],
+                "indicators":       overview_data['indicators'],
+            }
+            return templates.TemplateResponse(request, 'overview.html', context=context)
+        return call_with_error_handling(state, request, render_overview)
+    return overview_closure
 
+def indicator_detail(state):
+    async def indicator_detail_closure(request: Request):
+        indicator_id = request.path_params['indicator_id']
+        period, start, end = handle_time_parameters(request)
+        def render_details(request):
+            detail_data = state.data_provider.get_indicator_detail(indicator_id, period, start, end)
+            context = {
+                "period":           period,
+                "start":            start,
+                "end":              end,
+                "times":            special_times(),
+                'with_provider_id': detail_data['with_provider_id'],
+                'name':             detail_data['name'],
+                'description':      detail_data['description'],
+                "providers":        detail_data['providers'],
+            }
+            return templates.TemplateResponse(request, 'details.html', context=context)
+        return call_with_error_handling(state, request, render_details)
+    return indicator_detail_closure
 
 # Load configuration and select data provider.
 configuration = load_configuration()
+state.configuration = configuration
 if configuration.data_provider == 'dummy':
-    DATA_PROVIDER = RandomDataProvider(num_hospitals=8, num_indicators=8)
+    state.data_provider = RandomDataProvider(num_hospitals=8, num_indicators=8)
 elif configuration.data_provider == 'data-exchange-api':
     logger.info("Using backend '%s' with endpoint '%s'",
                 configuration.data_provider,
@@ -104,13 +124,13 @@ elif configuration.data_provider == 'data-exchange-api':
         logger.info("Provider id '%s', name '%s'",
                     configuration.provider_id,
                     configuration.provider_name)
-    DATA_PROVIDER = OpenAPIDataProvider(configuration.data_exchange_endpoint,
-                                        configuration.provider_id,
-                                        configuration.provider_name)
+    state.data_provider = OpenAPIDataProvider(configuration.data_exchange_endpoint,
+                                              configuration.provider_id,
+                                              configuration.provider_name)
 
 
 app = Starlette(debug=configuration.debug_mode, routes=[
     Mount('/static', StaticFiles(directory='static'), name='static'),
-    Route('/', overview),
-    Route("/indicator/{indicator_id:int}", indicator_detail),
+    Route('/', overview(state)),
+    Route("/indicator/{indicator_id:int}", indicator_detail(state)),
 ])

@@ -106,7 +106,7 @@ def indicator_detail(state):
                 'description':      detail_data['description'],
                 "providers":        detail_data['providers'],
             }
-            return templates.TemplateResponse(request, 'details.html', context=context)
+            return templates.TemplateResponse(request, 'detail.html', context=context)
         return call_with_error_handling(state, request, render_details)
     return indicator_detail_closure
 

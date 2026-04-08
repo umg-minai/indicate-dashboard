@@ -4,6 +4,7 @@ from typing import Literal, Optional
 
 from load_dotenv import load_dotenv
 from pydantic import BaseModel, Field
+import indicate_data_exchange_api_client.hub as hub
 
 
 DataProvider = Literal['data-exchange-api', 'dummy']
@@ -27,10 +28,9 @@ class Configuration(BaseModel):
 Either 'data-exchange-api' for retrieving data from the INDICATE hub or 'dummy' for displaying randomly generated \
 placeholder data.""")
 
-    data_exchange_endpoint: Optional[str] = Field(
-        default=None,
-        description="""REST endpoint at which the INDICATE data exchange server should be contacted.
-The value should be a HTTP URL.""")
+    data_exchange: hub.Configuration = Field(
+        ...,
+        description="""REST endpoint at which the INDICATE data exchange server should be contacted.""")
 
     provider_id: Optional[str] = Field(
         default=None,
@@ -77,14 +77,19 @@ def load_configuration(config_file: str = ".env") -> Configuration:
     maybe_from_env("listen_port", "LISTEN_PORT", int)
 
     maybe_from_env("data_provider", "DATA_PROVIDER")
-    maybe_from_env("data_exchange_endpoint", "DATA_EXCHANGE_ENDPOINT")
+
+    maybe_from_env(("data_exchange", "endpoint"), "DATA_EXCHANGE_ENDPOINT")
+    maybe_from_env(("data_exchange", "tenant_id"), "DATA_EXCHANGE_TENANT_ID")
+    maybe_from_env(("data_exchange", "sp_client_id"), "DATA_EXCHANGE_SP_CLIENT_ID")
+    maybe_from_env(("data_exchange", "sp_client_secret"), "DATA_EXCHANGE_SP_CLIENT_SECRET")
+    maybe_from_env(("data_exchange", "apim_app_id"), "DATA_EXCHANGE_APIM_APP_ID")
 
     maybe_from_env("provider_id", "PROVIDER_ID")
     maybe_from_env("provider_name", "PROVIDER_NAME")
 
     configuration = Configuration(**args)
     if (configuration.data_provider == 'data-exchange-api'
-            and configuration.data_exchange_endpoint is None):
+            and configuration.data_exchange.endpoint is None):
         raise RuntimeError(f"When backend '{configuration.data_provider}' is used, DATA_EXCHANGE_ENDPOINT must be \
 configured.")
     return configuration

@@ -4,3 +4,4 @@ starlette
 uvicorn
 jinja2
 indicate_data_exchange_api_client
+requests >= 2.33.1

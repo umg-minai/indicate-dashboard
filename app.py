@@ -3,6 +3,7 @@ from datetime import datetime, timedelta, date
 from typing import Tuple, cast
 
 from indicate_data_exchange_api_client import AggregationPeriodKind
+from indicate_data_exchange_api_client.hub import Hub
 from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import JSONResponse
@@ -24,6 +25,7 @@ class State:
     def __init__(self):
         self.configuration = None
         self.data_provider = None
+        self.hub           = None
 
 
 state = State()
@@ -125,14 +127,15 @@ if configuration.data_provider == 'dummy':
 elif configuration.data_provider == 'data-exchange-api':
     logger.info("Using backend '%s' with endpoint '%s'",
                 configuration.data_provider,
-                configuration.data_exchange_endpoint)
+                configuration.data_exchange.endpoint)
     if configuration.provider_id is None:
         logger.info("Provider id not set; running in \"hub mode\"")
     else:
         logger.info("Provider id '%s', name '%s'",
                     configuration.provider_id,
                     configuration.provider_name)
-    state.data_provider = OpenAPIDataProvider(configuration.data_exchange_endpoint,
+    state.hub = Hub.from_configuration(state.configuration.data_exchange)
+    state.data_provider = OpenAPIDataProvider(state.hub,
                                               configuration.provider_id,
                                               configuration.provider_name)
 

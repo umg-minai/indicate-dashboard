@@ -1,7 +1,7 @@
 import random
 from datetime import timedelta
 
-from indicate_data_exchange_api_client import DefaultApi, ApiClient, Configuration, AggregationPeriodKind, \
+from indicate_data_exchange_api_client import AggregationPeriodKind, \
     AggregatedQualityIndicatorResult
 
 
@@ -112,14 +112,13 @@ class RandomDataProvider(DataProviderBase):
 
 
 class OpenAPIDataProvider(DataProviderBase):
-    def __init__(self, base_url, provider_id, provider_name):
-        self.base_url = base_url
-        self.api = DefaultApi(ApiClient(configuration=Configuration(host=base_url)))
+    def __init__(self, hub, provider_id, provider_name):
+        self.hub = hub
         self.provider_id = provider_id
         self.provider_name = provider_name
 
     def _get_indicators_info(self):
-        return self.api.indicator_info_get()
+        return self.hub.indicator_info()
 
 
     def get_overview(self, period: AggregationPeriodKind, start_date, end_date):
@@ -132,7 +131,7 @@ class OpenAPIDataProvider(DataProviderBase):
                         None)
 
         # Get
-        response = self.api.results_get(period, period_start=start_date, period_end=end_date)
+        response = self.hub.results(period, period_start=start_date, period_end=end_date)
         #
         indicator_results = {}
         def ensure_indicator(indicator_id):
@@ -206,7 +205,7 @@ class OpenAPIDataProvider(DataProviderBase):
         indicators_info = self._get_indicators_info()
         # TODO: handle error
         indicator_info = next((info for info in indicators_info if info.concept_id == indicator_id), None)
-        response = self.api.results_get(period, period_start=start_date, period_end=end_date)
+        response = self.hub.results(period, period_start=start_date, period_end=end_date)
         provider_results = {}
 
         def ensure_provider(provider_id):

@@ -12,7 +12,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update                  \
     && DEBIAN_FRONTEND=noninteractive apt-get install --assume-yes \
          git
 
-RUN git clone https://github.com/umg-minai/indicate-data-exchange-api-client
+RUN git clone -b "v${API_VERSION}" https://github.com/umg-minai/indicate-data-exchange-api-client
 
 WORKDIR indicate-data-exchange-api-client
 

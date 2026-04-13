@@ -79,10 +79,15 @@ def load_configuration(config_file: str = ".env") -> Configuration:
     maybe_from_env("data_provider", "DATA_PROVIDER")
 
     maybe_from_env(("data_exchange", "endpoint"), "DATA_EXCHANGE_ENDPOINT")
+
     maybe_from_env(("data_exchange", "tenant_id"), "DATA_EXCHANGE_TENANT_ID")
     maybe_from_env(("data_exchange", "sp_client_id"), "DATA_EXCHANGE_SP_CLIENT_ID")
-    maybe_from_env(("data_exchange", "sp_client_secret"), "DATA_EXCHANGE_SP_CLIENT_SECRET")
     maybe_from_env(("data_exchange", "apim_app_id"), "DATA_EXCHANGE_APIM_APP_ID")
+
+    maybe_from_env(("data_exchange", "sp_client_secret"), "DATA_EXCHANGE_SP_CLIENT_SECRET")
+
+    maybe_from_env(("data_exchange", "cert_thumbprint"), "DATA_EXCHANGE_CERT_THUMBPRINT")
+    maybe_from_env(("data_exchange", "cert_key"), "DATA_EXCHANGE_CERT_KEY")
 
     maybe_from_env("provider_id", "PROVIDER_ID")
     maybe_from_env("provider_name", "PROVIDER_NAME")

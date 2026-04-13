@@ -3,5 +3,5 @@ load-dotenv
 starlette
 uvicorn
 jinja2
-indicate_data_exchange_api_client
+indicate_data_exchange_api_client >= 1.2.0
 requests >= 2.33.1

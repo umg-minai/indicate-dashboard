@@ -2,7 +2,7 @@
 # this here so that we don't have to set up workflows for some Python
 # package repository.
 
-ARG API_VERSION=1.1.0
+ARG API_VERSION=1.2.0
 
 FROM python:3.13-slim-trixie AS client-library
 

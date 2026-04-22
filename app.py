@@ -134,6 +134,10 @@ elif configuration.data_provider == 'data-exchange-api':
         logger.info("Provider id '%s', name '%s'",
                     configuration.provider_id,
                     configuration.provider_name)
+         # Copy data provider ID into data exchange configuration so
+         # that communication with the INDICATE hub can include the ID
+         # in the provenance headers of sent requests.
+        state.configuration.data_exchange.site_id = configuration.provider_id
     state.hub = Hub.from_configuration(state.configuration.data_exchange)
     state.data_provider = OpenAPIDataProvider(state.hub,
                                               configuration.provider_id,
@@ -147,7 +151,7 @@ app = Starlette(debug=configuration.debug_mode, routes=[
     Route('/healthcheck', health_check(state)),
 ])
 
-__version__ = '1.1.1'
+__version__ = '1.1.2'
 
 if __name__ == "__main__":
     import uvicorn

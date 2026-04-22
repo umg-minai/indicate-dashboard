@@ -143,7 +143,7 @@ class OpenAPIDataProvider(DataProviderBase):
                     'providers':          {},
                     'values':             [],
                     'observation_counts': [],
-                    'history':            [],
+                    'history':            {},
                 }
             return indicator_results[indicator_id]
         def add_to_provider(indicator_result, provider, observation):
@@ -152,14 +152,14 @@ class OpenAPIDataProvider(DataProviderBase):
                 providers[provider] = []
             providers[provider].append(observation)
         def add_to_history(history, observation: AggregatedQualityIndicatorResult):
-            cell = next((cell for cell in history if cell['date'] == observation.aggregation_period_start), None)
+            cell = history.get(observation.aggregation_period_start, None)
             if cell is None:
                 cell = {
                     'date':               observation.aggregation_period_start.date(),
                     'values':             [],
                     'observation_counts': [],
                 }
-                history.append(cell)
+                history[observation.aggregation_period_start.date()] = cell
             cell['values'].append(observation.average_value)
             cell['observation_counts'].append(observation.observation_count)
 
@@ -171,29 +171,46 @@ class OpenAPIDataProvider(DataProviderBase):
             add_to_history(indicator_result['history'], quality_indicator_data)
 
         #
+        def safe_average(sequence, length=None):
+            if length is None:
+                length = len(sequence)
+            return sum(sequence) / length if length > 0 else 0
+
+        # Replace the "values" property of each history cell with a
+        # "value" property that is the average of the
+        # values. Similarly, replace the "observation_counts" cell
+        # with an "observation_count" that is the sum of the
+        # observation counts.
         def aggregate_history(history):
             return [
                 {
                     "date":              cell["date"],
-                    "value":             sum(cell["values"]) / len(cell["values"]),
+                    "value":             safe_average(cell["values"]),
                     "observation_count": sum(cell["observation_counts"])
                 }
-                for cell in history
+                for cell in sorted(history.values(), key=lambda cell: cell["date"])
             ]
         def format_indicator_result(indicator_result):
-            own_values = indicator_result['providers'].get(self.provider_id, [])
-            history = indicator_result['history']
+            history = aggregate_history(indicator_result['history'])
             result = {
                 'id':            indicator_result['id'],
                 'name':          indicator_result['title'],
                 'num_hospitals': len(indicator_result['providers']),
-                'num_patients':  sum(indicator_result['observation_counts']) / len(history),
-                'avg_all':       sum(indicator_result['values']) / len(history),
-                'history':       aggregate_history(history),
+                'num_patients':  safe_average([ cell["observation_count"] for cell in history ]),
+                'avg_all':       safe_average([ cell['value'] for cell in history]),
+                'history':       history,
+                'avg_own':       0,
+                'rank':          0,
             }
             if self.provider_id is not None:
-                result['avg_own'] = sum(result.average_value for result in own_values) / len(own_values)
-                result['rank']    = 0
+                provider_averages = sorted([ (provider_id, safe_average([ result.average_value for result in provider_results ]))
+                                             for provider_id, provider_results in indicator_result['providers'].items() ],
+                                           key=lambda cell: cell[1], reverse=True)
+                for i, (provider_id, average_value) in enumerate(provider_averages):
+                    if provider_id == self.provider_id:
+                        result['avg_own'] = average_value
+                        result['rank']    = i + 1
+                        break
             return result
         return {
             'with_provider_id': self.provider_id is not None,
@@ -230,21 +247,24 @@ class OpenAPIDataProvider(DataProviderBase):
                 provider_result['observation_counts'].append(quality_indicator_data.observation_count)
         #
         def format_provider_data(provider_result):
-            print(f"{provider_result['provider_id']} == {self.provider_id}")
             is_self = (provider_result['provider_id'] == self.provider_id)
             return {
                 'is_self':      is_self,
-                'rank':         0,
                 'label':        self.provider_name if is_self else '*' * 6,
                 'num_patients': sum(provider_result['observation_counts']) / len(provider_result['observation_counts']),
                 'avg':          sum(provider_result['values']) / len(provider_result['values']),
                 'history':      provider_result['history'],
             }
+        # Sort data provider-specific results by average adherence value, highest adherence first.
+        sorted_providers = sorted([ format_provider_data(provider_result)
+                                    for provider_result in provider_results.values() ],
+                                  key=lambda cell: cell['avg'], reverse=True)
+        # Assign ranks from 1 to N to the sorted items.
+        ranked_providers = [ { 'rank': i + 1, **cell} for i, cell in enumerate(sorted_providers) ]
         return {
             'with_provider_id': self.provider_id is not None,
             'id':               indicator_id,
             'name':             indicator_info.title,
             'description':      indicator_info.description,
-            'providers':        [ format_provider_data(provider_result)
-                                  for provider_result in provider_results.values()]
+            'providers':        ranked_providers,
         }

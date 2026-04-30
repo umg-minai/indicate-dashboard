@@ -151,7 +151,7 @@ app = Starlette(debug=configuration.debug_mode, routes=[
     Route('/healthcheck', health_check(state)),
 ])
 
-__version__ = '1.1.2'
+__version__ = '1.1.3'
 
 if __name__ == "__main__":
     import uvicorn

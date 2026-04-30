@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>INDICATE Quality Dashboard</title>
-      <link rel="icon" type="image/svg" href="/static/favicon.svg"/>
+    <link rel="icon" type="image/svg" href="/static/favicon.svg"/>
     <link rel="stylesheet" href="/static/style.css">
     <link href="/static/SimpleDataTables.css" rel="stylesheet" type="text/css">
     <script type="module">{% block script %}{% endblock %}</script>
@@ -34,7 +34,7 @@
         {% if period == 'monthly' %}
             <div class="fakebutton active">Monthly</div>
         {% else %}
-            <a class="fakebutton" href="?period=monthly&start={{ start }}&end={{ end }}">Montly</a>
+            <a class="fakebutton" href="?period=monthly&start={{ start }}&end={{ end }}">Monthly</a>
         {% endif %}
 
         {% if period == 'yearly' %}

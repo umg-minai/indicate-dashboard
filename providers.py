@@ -139,7 +139,7 @@ class OpenAPIDataProvider(DataProviderBase):
                 indicator_info = find_indicator_info(indicator_id)
                 indicator_results[indicator_id] = {
                     'id':                 indicator_id,
-                    'title':              indicator_info.title,
+                    'title':              indicator_info.title if indicator_info is not None else None,
                     'providers':          {},
                     'values':             [],
                     'observation_counts': [],
@@ -264,7 +264,7 @@ class OpenAPIDataProvider(DataProviderBase):
         return {
             'with_provider_id': self.provider_id is not None,
             'id':               indicator_id,
-            'name':             indicator_info.title,
-            'description':      indicator_info.description,
+            'name':             indicator_info.title if indicator_info is not None else None,
+            'description':      indicator_info.description if indicator_info is not None else None,
             'providers':        ranked_providers,
         }

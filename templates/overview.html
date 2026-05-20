@@ -30,7 +30,11 @@ window.dt = new DataTable("#overview-table")
       <tr class="table overview-table row">
           <td class="name">
               <a href="/indicator/{{ ind.id }}?start={{ start }}&end={{ end }}">
-                  {{ ind.name }}
+                  {% if ind.name %}
+                    {{ ind.name|e }}
+                  {% else %}
+                    {{ ind.id }} <br/> <span class="muted">(failed to look up QI info)</span>
+                  {% endif %}
               </a>
           </td>
           <td>

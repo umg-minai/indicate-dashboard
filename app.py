@@ -104,6 +104,7 @@ def indicator_detail(state):
                 "end":              end,
                 "times":            special_times(),
                 'with_provider_id': detail_data['with_provider_id'],
+                'indicator_id':     indicator_id,
                 'name':             detail_data['name'],
                 'description':      detail_data['description'],
                 "providers":        detail_data['providers'],
@@ -151,7 +152,7 @@ app = Starlette(debug=configuration.debug_mode, routes=[
     Route('/healthcheck', health_check(state)),
 ])
 
-__version__ = '1.1.3'
+__version__ = '1.1.4'
 
 if __name__ == "__main__":
     import uvicorn

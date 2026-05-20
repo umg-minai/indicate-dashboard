@@ -8,8 +8,20 @@ window.dt = new DataTable("#detail")
 
 {% block content %}
   <a class="back" href="/?start={{ start }}&end={{ end }}">← Back to overview</a>
-  <h1>{{ name|e }}</h1>
-  <p class="muted">{{ description|e }}</p>
+  <h1>
+      {% if name %}
+        {{ name|e }}
+      {% else %}
+        {{ indicator_id }} <span class="muted">(failed to look up QI info)</span>
+      {% endif %}
+  </h1>
+  <p class="muted">
+    {% if description %}
+      {{ description|e }}
+    {% else %}
+      (failed to look up QI info)
+    {% endif %}
+  </p>
 
   <table id="detail" class="grid">
     <thead>

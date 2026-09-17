@@ -40,7 +40,7 @@ window.dt = new DataTable("#detail")
       <td class="rank">{{ p.rank }} / {{ providers|length }} </td>
       <td class="provider">{{ p.label|e }}</td>
       <td>{{ '%.2f' % p.num_patients }}</td>
-      <td>{{ '%.2f' % p.avg }} %</td>
+      <td>{{ '%.2f' % (100*p.avg) }} %</td>
       <td>
           <div class="history">
               {% for cell in p.history %}

@@ -1,5 +1,6 @@
 import random
 from datetime import timedelta
+from typing import Optional
 
 from indicate_data_exchange_api_client import AggregationPeriodKind, \
     AggregatedQualityIndicatorResult
@@ -218,7 +219,8 @@ class OpenAPIDataProvider(DataProviderBase):
                                   for indicator_result in indicator_results.values() ]
         }
 
-    def get_indicator_detail(self, indicator_id, period: AggregationPeriodKind, start_date, end_date):
+    def get_indicator_detail(self, indicator_id, period: AggregationPeriodKind, start_date, end_date,
+                             provider_names: Optional[dict[str, str]]):
         indicators_info = self._get_indicators_info()
         # TODO: handle error
         indicator_info = next((info for info in indicators_info if info.concept_id == indicator_id), None)
@@ -247,10 +249,16 @@ class OpenAPIDataProvider(DataProviderBase):
                 provider_result['observation_counts'].append(quality_indicator_data.observation_count)
         #
         def format_provider_data(provider_result):
-            is_self = (provider_result['provider_id'] == self.provider_id)
+            result_provider_id = provider_result['provider_id']
+            is_self = (result_provider_id == self.provider_id)
+            label = '*' * 6
+            if is_self:
+                label = self.provider_name
+            elif provider_names and result_provider_id in provider_names:
+                label = provider_names[result_provider_id]
             return {
                 'is_self':      is_self,
-                'label':        self.provider_name if is_self else '*' * 6,
+                'label':        label,
                 'num_patients': sum(provider_result['observation_counts']) / len(provider_result['observation_counts']),
                 'avg':          sum(provider_result['values']) / len(provider_result['values']),
                 'history':      provider_result['history'],

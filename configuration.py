@@ -44,6 +44,9 @@ obtained from the hub.""")
         description="""Name of the data provider for display in the dashboard.
 Can be chosen freely and does not impact functional aspects.""")
 
+    provider_id_map: Optional[dict[str, str]] = Field(
+        default=None
+    )
 
 def load_configuration(config_file: str = ".env") -> Configuration:
     """
@@ -91,6 +94,9 @@ def load_configuration(config_file: str = ".env") -> Configuration:
 
     maybe_from_env("provider_id", "PROVIDER_ID")
     maybe_from_env("provider_name", "PROVIDER_NAME")
+
+    # Debugging only
+    maybe_from_env("provider_id_map", "PROVIDER_ID_MAP", transform=eval)
 
     configuration = Configuration(**args)
     if (configuration.data_provider == 'data-exchange-api'

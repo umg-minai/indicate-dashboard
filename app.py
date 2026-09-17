@@ -97,7 +97,7 @@ def indicator_detail(state):
         indicator_id = request.path_params['indicator_id']
         period, start, end = handle_time_parameters(request)
         def render_details(request):
-            detail_data = state.data_provider.get_indicator_detail(indicator_id, period, start, end)
+            detail_data = state.data_provider.get_indicator_detail(indicator_id, period, start, end, state.configuration.provider_id_map)
             context = {
                 "period":           period,
                 "start":            start,
